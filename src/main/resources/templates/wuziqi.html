@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .game-info {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .game-info span {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .current-player {
+            color: #333;
+        }
+
+        .black-turn {
+            color: #000 !important;
+        }
+
+        .white-turn {
+            color: #666 !important;
+        }
+
+        .game-container {
+            background: #dcb35c;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 0;
+            background: #dcb35c;
+            position: relative;
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cell::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #8b7355;
+        }
+
+        .cell::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: #8b7355;
+        }
+
+        .cell:first-child::before,
+        .cell:nth-child(-n+15)::before {
+            top: 50%;
+        }
+
+        .cell:nth-child(15n+1)::after {
+            left: 50%;
+        }
+
+        .stone {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+        }
+
+        .stone.black {
+            background: radial-gradient(circle at 30% 30%, #555, #000);
+        }
+
+        .stone.white {
+            background: radial-gradient(circle at 30% 30%, #fff, #ccc);
+        }
+
+        .cell:hover::before {
+            background: rgba(139, 115, 85, 0.8);
+        }
+
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .restart-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .restart-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .save-btn {
+            background: #2196F3;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .load-btn {
+            background: #9c27b0;
+            color: white;
+        }
+
+        .load-btn:hover {
+            background: #7b1fa2;
+            transform: translateY(-2px);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 20px;
+            text-align: center;
+            animation: popIn 0.3s ease;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal button {
+            background: #667eea;
+            color: white;
+            margin: 5px;
+        }
+
+        .modal button:hover {
+            background: #5a6fd6;
+        }
+
+        .modal .cancel-btn {
+            background: #757575;
+        }
+
+        .modal .cancel-btn:hover {
+            background: #616161;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .modal input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .save-list {
+            text-align: left;
+            margin: 15px 0;
+        }
+
+        .save-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .save-item:hover {
+            background: #e0e0e0;
+        }
+
+        .save-item .save-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .save-item .save-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .save-item .delete-btn {
+            background: #f44336;
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .save-item .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        .no-saves {
+            color: #666;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .star-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #8b7355;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+
+        .message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 200;
+            display: none;
+        }
+
+        .message.success {
+            background: #4CAF50;
+        }
+
+        .message.error {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1>五子棋游戏</h1>
+
+    <div class="game-info">
+        <span class="current-player">当前玩家: <span id="currentPlayer" class="black-turn">黑棋</span></span>
+    </div>
+
+    <div class="game-container">
+        <div id="board">
+            <th:block th:each="row, rowStat : ${boardState.board}">
+                <th:block th:each="cell, colStat : ${row}">
+                    <div class="cell"
+                         th:attr="data-row=${cell.row},data-col=${cell.col}">
+                        <div class="star-point" th:if="${cell.starPoint}"></div>
+                    </div>
+                </th:block>
+            </th:block>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button class="restart-btn" onclick="restartGame()">重新开始</button>
+        <button class="save-btn" onclick="showSaveModal()">保存游戏</button>
+        <button class="load-btn" onclick="showLoadModal()">加载游戏</button>
+    </div>
+
+    <div class="overlay" id="winnerOverlay">
+        <div class="modal">
+            <h2 id="winnerText">黑棋获胜!</h2>
+            <button onclick="closeWinnerModal()">再来一局</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="saveOverlay">
+        <div class="modal">
+            <h2>保存游戏</h2>
+            <input type="text" id="saveName" placeholder="请输入存档名称（可选）">
+            <div>
+                <button onclick="saveGame()">保存</button>
+                <button class="cancel-btn" onclick="closeSaveModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="loadOverlay">
+        <div class="modal">
+            <h2>加载游戏</h2>
+            <div class="save-list" id="saveList"></div>
+            <button class="cancel-btn" onclick="closeLoadModal()">取消</button>
+        </div>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <script th:inline="none">
+        const EMPTY = 0;
+        const BLACK = 1;
+        const WHITE = 2;
+
+        let currentPlayer = BLACK;
+        let gameOver = false;
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            msg.style.display = 'block';
+            setTimeout(() => {
+                msg.style.display = 'none';
+            }, 2000);
+        }
+
+        async function loadGameState() {
+            try {
+                const response = await fetch('/api/state');
+                const data = await response.json();
+
+                currentPlayer = data.currentPlayer;
+                gameOver = data.gameOver;
+
+                renderBoard(data.board);
+                updatePlayerDisplay();
+            } catch (error) {
+                console.error('Error loading game state:', error);
+            }
+        }
+
+        function renderBoard(board) {
+            clearBoard();
+            for (let i = 0; i < board.length; i++) {
+                for (let j = 0; j < board[i].length; j++) {
+                    const state = board[i][j].state;
+                    if (state !== EMPTY) {
+                        renderCell(i, j, state);
+                    }
+                }
+            }
+        }
+
+        function clearBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const stone = cell.querySelector('.stone');
+                if (stone) {
+                    stone.remove();
+                }
+            });
+        }
+
+        async function makeMove(row, col) {
+            if (gameOver) {
+                return;
+            }
+
+            const cellIndex = row * 15 + col;
+            const cells = document.querySelectorAll('.cell');
+            const cell = cells[cellIndex];
+
+            if (cell.querySelector('.stone')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/move', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        row: row,
+                        col: col,
+                        player: currentPlayer
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    renderCell(row, col, currentPlayer);
+
+                    if (data.gameOver) {
+                        gameOver = true;
+                        const winner = data.winner === BLACK ? '黑棋' : '白棋';
+                        showWinner(winner);
+                    } else {
+                        currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
+                        updatePlayerDisplay();
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function renderCell(row, col, player) {
+            const cells = document.querySelectorAll('.cell');
+            const index = row * 15 + col;
+            const cell = cells[index];
+
+            const stone = document.createElement('div');
+            stone.className = `stone ${player === BLACK ? 'black' : 'white'}`;
+            cell.appendChild(stone);
+        }
+
+        function updatePlayerDisplay() {
+            const playerSpan = document.getElementById('currentPlayer');
+            playerSpan.textContent = currentPlayer === BLACK ? '黑棋' : '白棋';
+            playerSpan.className = currentPlayer === BLACK ? 'black-turn' : 'white-turn';
+        }
+
+        function showWinner(winner) {
+            document.getElementById('winnerText').textContent = `${winner}获胜!`;
+            document.getElementById('winnerOverlay').style.display = 'flex';
+        }
+
+        function closeWinnerModal() {
+            document.getElementById('winnerOverlay').style.display = 'none';
+            restartGame();
+        }
+
+        async function restartGame() {
+            try {
+                const response = await fetch('/api/restart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                currentPlayer = data.currentPlayer;
+                gameOver = data.gameOver;
+                renderBoard(data.board);
+                updatePlayerDisplay();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function showSaveModal() {
+            document.getElementById('saveName').value = '';
+            document.getElementById('saveOverlay').style.display = 'flex';
+        }
+
+        function closeSaveModal() {
+            document.getElementById('saveOverlay').style.display = 'none';
+        }
+
+        async function saveGame() {
+            const saveName = document.getElementById('saveName').value;
+            try {
+                const response = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ saveName: saveName })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('游戏保存成功!', 'success');
+                    closeSaveModal();
+                } else {
+                    showMessage('保存失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('保存失败', 'error');
+            }
+        }
+
+        async function showLoadModal() {
+            document.getElementById('loadOverlay').style.display = 'flex';
+            await loadSaveList();
+        }
+
+        function closeLoadModal() {
+            document.getElementById('loadOverlay').style.display = 'none';
+        }
+
+        async function loadSaveList() {
+            try {
+                const response = await fetch('/api/saves');
+                const saves = await response.json();
+
+                const listDiv = document.getElementById('saveList');
+                listDiv.innerHTML = '';
+
+                if (saves.length === 0) {
+                    listDiv.innerHTML = '<div class="no-saves">暂无存档</div>';
+                    return;
+                }
+
+                saves.forEach(save => {
+                    const item = document.createElement('div');
+                    item.className = 'save-item';
+                    item.innerHTML = `
+                        <div>
+                            <div class="save-name">${save.saveName}</div>
+                            <div class="save-time">${formatTime(save.createTime)}</div>
+                        </div>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteSave(${save.id})">删除</button>
+                    `;
+                    item.onclick = () => loadGame(save.id);
+                    listDiv.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Error loading saves:', error);
+            }
+        }
+
+        function formatTime(timeStr) {
+            const date = new Date(timeStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        async function loadGame(saveId) {
+            try {
+                const response = await fetch(`/api/load/${saveId}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    currentPlayer = data.boardState.currentPlayer;
+                    gameOver = data.boardState.gameOver;
+                    renderBoard(data.boardState.board);
+                    updatePlayerDisplay();
+                    showMessage('游戏加载成功!', 'success');
+                    closeLoadModal();
+                } else {
+                    showMessage('加载失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('加载失败', 'error');
+            }
+        }
+
+        async function deleteSave(saveId) {
+            if (!confirm('确定要删除这个存档吗？')) {
+                return;
+            }
+            try {
+                const response = await fetch(`/api/save/${saveId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('存档删除成功!', 'success');
+                    await loadSaveList();
+                } else {
+                    showMessage('删除失败', 'error');
+                }
+            } catch (error) {
+                showMessage('删除失败', 'error');
+            }
+        }
+
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                const row = parseInt(this.getAttribute('data-row'));
+                const col = parseInt(this.getAttribute('data-col'));
+                makeMove(row, col);
+            });
+        });
+
+        loadGameState();
+    </script>
+</body>
+</html>

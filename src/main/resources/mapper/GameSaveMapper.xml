@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.wuziqi.mapper.GameSaveMapper">
+
+    <resultMap id="GameSaveResultMap" type="com.example.wuziqi.entity.GameSave">
+        <id property="id" column="id"/>
+        <result property="saveName" column="save_name"/>
+        <result property="boardData" column="board_data"/>
+        <result property="currentPlayer" column="current_player"/>
+        <result property="gameOver" column="game_over"/>
+        <result property="winner" column="winner"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="findAllOrderByCreateTimeDesc" resultMap="GameSaveResultMap">
+        SELECT id, save_name, board_data, current_player, game_over, winner, create_time
+        FROM game_save
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>
