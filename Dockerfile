@@ -1,5 +1,5 @@
-# 使用 Java 11 运行环境
-FROM openjdk:11-jre-slim
+# 使用 Java 17 运行环境
+FROM openjdk:17-jre-slim
 
 # 设置工作目录
 WORKDIR /app
