@@ -1,0 +1,33 @@
+-- 创建用户表
+CREATE TABLE IF NOT EXISTS user (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'USER',
+    enabled BOOLEAN DEFAULT TRUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 创建游戏房间表
+CREATE TABLE IF NOT EXISTS game_room (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    room_name VARCHAR(100) NOT NULL,
+    host_player VARCHAR(50) NOT NULL,
+    guest_player VARCHAR(50),
+    status INT DEFAULT 0,
+    board_data TEXT,
+    current_player INT DEFAULT 1,
+    game_over BOOLEAN DEFAULT FALSE,
+    winner INT DEFAULT 0,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 创建游戏存档表（如果不存在）
+CREATE TABLE IF NOT EXISTS game_save (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    save_name VARCHAR(100) NOT NULL,
+    board_data TEXT NOT NULL,
+    current_player INT DEFAULT 1,
+    game_over BOOLEAN DEFAULT FALSE,
+    winner INT DEFAULT 0,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

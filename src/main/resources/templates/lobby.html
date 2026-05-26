@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋 - 游戏大厅</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .online-count {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .rooms-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .rooms-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .room-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .room-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .room-card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .room-info h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .room-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .room-status {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-playing {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-finished {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .room-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-sm {
+            padding: 8px 20px;
+            font-size: 14px;
+        }
+
+        .btn-join {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-watch {
+            background: #9c27b0;
+            color: white;
+        }
+
+        .btn-disabled {
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-size: 16px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 400px;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #757575;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 五子棋游戏大厅</h1>
+            <div class="user-info">
+                <span>👤 <span th:text="${username}">用户</span></span>
+                <span class="online-count">👥 在线: <span th:text="${onlineCount}">0</span></span>
+                <a href="/logout" class="logout-btn" id="logoutLink">退出登录</a>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="showCreateRoomModal()">🏠 创建房间</button>
+            <button class="btn btn-secondary" onclick="refreshRooms()">🔄 刷新列表</button>
+        </div>
+
+        <div class="rooms-section">
+            <h2>📋 房间列表</h2>
+            <div class="room-list" id="roomList">
+                <th:block th:each="room : ${rooms}">
+                    <div class="room-card">
+                        <div class="room-info">
+                            <h3 th:text="${room.roomName}">房间名称</h3>
+                            <div class="room-meta">
+                                <span>房主: <span th:text="${room.hostPlayer}">-</span></span>
+                                <span th:if="${room.guestPlayer != null}">对手: <span th:text="${room.guestPlayer}">-</span></span>
+                                <span class="room-status" 
+                                      th:classappend="${room.status == 0} ? 'status-waiting' : (${room.status == 1} ? 'status-playing' : 'status-finished')"
+                                      th:text="${room.status == 0} ? '等待中' : (${room.status == 1} ? '游戏中' : '已结束')">
+                                </span>
+                            </div>
+                        </div>
+                        <div class="room-actions">
+                            <button th:if="${room.status == 0 and room.guestPlayer == null and room.hostPlayer != username}" 
+                                    class="btn btn-sm btn-join" 
+                                    th:attr="onclick='joinRoom(' + ${room.id} + ')'">
+                                加入对战
+                            </button>
+                            <button th:if="${room.status == 1 and (room.hostPlayer != username and room.guestPlayer != username)}" 
+                                    class="btn btn-sm btn-watch"
+                                    th:attr="onclick='watchRoom(' + ${room.id} + ')'">
+                                观战
+                            </button>
+                            <button th:if="${room.status == 2}" 
+                                    class="btn btn-sm btn-disabled" 
+                                    disabled>
+                                已结束
+                            </button>
+                        </div>
+                    </div>
+                </th:block>
+                <div th:if="${#lists.isEmpty(rooms)}" class="empty-message">
+                    暂无房间，点击"创建房间"开始游戏吧！
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="createRoomModal">
+        <div class="modal-content">
+            <h2>创建房间</h2>
+            <div class="form-group">
+                <label for="roomName">房间名称（可选）</label>
+                <input type="text" id="roomName" placeholder="留空则使用默认名称">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeCreateRoomModal()">取消</button>
+                <button class="btn btn-primary" onclick="createRoom()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const _tabId = sessionStorage.getItem('tabId') || '';
+        function tabUrl(url) {
+            return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'tabId=' + _tabId;
+        }
+        // 更新退出链接
+        if (_tabId) {
+            document.getElementById('logoutLink').href = tabUrl('/logout');
+        }
+
+        function showCreateRoomModal() {
+            document.getElementById('roomName').value = '';
+            document.getElementById('createRoomModal').style.display = 'flex';
+        }
+
+        function closeCreateRoomModal() {
+            document.getElementById('createRoomModal').style.display = 'none';
+        }
+
+        async function createRoom() {
+            const roomName = document.getElementById('roomName').value;
+            try {
+                const response = await fetch(tabUrl('/api/room/create'), {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({roomName: roomName})
+                });
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = tabUrl('/room/' + data.roomId);
+                } else {
+                    alert('创建失败: ' + data.message);
+                }
+            } catch (error) {
+                alert('创建失败');
+            }
+        }
+
+        async function joinRoom(roomId) {
+            try {
+                const response = await fetch(tabUrl('/api/room/join/' + roomId), {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = tabUrl('/room/' + roomId);
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('加入失败');
+            }
+        }
+
+        function watchRoom(roomId) {
+            window.location.href = tabUrl('/room/' + roomId);
+        }
+
+        function refreshRooms() {
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
