@@ -17,7 +17,7 @@ services:
       retries: 5
 
   app:
-    image: ghcr.io/mracle666/wuziqi:latest
+    build: .
     container_name: wuziqi-app
     ports:
       - "8090:8090"
