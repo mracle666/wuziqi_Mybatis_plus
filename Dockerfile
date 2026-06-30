@@ -1,14 +1,14 @@
-# 使用 Java 17 运行环境
-FROM openjdk:17-jre-slim
-
-# 设置工作目录
+# 第一阶段：构建 JAR
+FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn clean package -DskipTests -B
 
-# 复制 JAR 文件（注意：这里的 *.jar 是占位符，实际构建时需要有文件）
-COPY target/wuziqi-1.0.0.jar app.jar
-
-# 暴露端口
+# 第二阶段：运行
+FROM openjdk:17-jre-slim
+WORKDIR /app
+COPY --from=builder /app/target/wuziqi-1.0.0.jar app.jar
 EXPOSE 8090
-
-# 启动命令
 ENTRYPOINT ["java", "-jar", "app.jar"]
