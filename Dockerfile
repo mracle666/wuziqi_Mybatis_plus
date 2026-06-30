@@ -1,5 +1,5 @@
-# 使用 Java 11 运行环境
-FROM openjdk:11-jre-slim
+# 使用 Java 17 运行环境
+FROM openjdk:17-jre-slim
 
 # 设置工作目录
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/wuziqi-1.0.0.jar app.jar
 
 # 暴露端口
-EXPOSE 8080
+EXPOSE 8090
 
 # 启动命令
 ENTRYPOINT ["java", "-jar", "app.jar"]
