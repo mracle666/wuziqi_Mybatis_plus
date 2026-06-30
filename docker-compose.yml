@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:8.0
+    image: mysql:8.0.26.26
     container_name: wuziqi-mysql
     environment:
       MYSQL_ROOT_PASSWORD: 12345
